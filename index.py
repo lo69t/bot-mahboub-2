@@ -55,7 +55,7 @@ def send_welcome(message):
     
     bot.reply_to(message, welcome_text, reply_markup=markup, parse_mode="Markdown")
 
-@app.route('/' + TELEGRAM_TOKEN, methods=['POST'])
+@app.route('/', methods=['POST'])
 def getMessage():
     json_string = request.get_data().decode('utf-8')
     update = telebot.types.Update.de_json(json_string)
