@@ -3,11 +3,10 @@ import telebot
 from flask import Flask, request
 from google import genai
 from google.genai import types
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# إعدادات التوكن (مباشرة من Vercel)
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# إعدادات التوكن
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -20,34 +19,19 @@ def get_ai_response(user_id, text_input):
         user_sessions[user_id] = client.chats.create(
             model="gemini-2.0-flash", 
             config=types.GenerateContentConfig(
-                # هنا بنعرف البوت بشخصيته الجديدة (صديق ومساعد دراسة)
-                system_instruction="أنت مساعد ذكي وصديق مخلص، مطورك هو م. محمد محبوب نصار. ردك يكون بالمصري العامية، خليك ودود جداً، ساعد المستخدم في المذاكرة أو الدردشة كأنك صاحبه."
+                system_instruction="أنت مساعد ذكي وصديق لمحمد محبوب نصار، رد بالمصري وساعد في المذاكرة."
             )
         )
-    chat = user_sessions[user_id]
-    response = chat.send_message(text_input)
-    return response.text
+    return user_sessions[user_id].send_message(text_input).text
 
-# رسالة الترحيب بالأزرار (بدون تغيير في المسارات)
+# التعديل هنا فقط: رسالة الترحيب
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    welcome_text = (
-        f"أهلاً بك يا {message.from_user.first_name}! 👋\n\n"
-        "أنا مساعدك الذكي وصديقك.. تقدر تدردش معايا في أي حاجة أو نذاكر سوا. 📚✨\n\n"
-        "✨ **عن المطور وخدماته:**\n"
-        "م. محمد محبوب نصار، متخصص في تقديم الحلول التقنية والبرمجية.\n\n"
-        "للتواصل مع المطور مباشرة 👇"
-    )
+    markup = telebot.types.InlineKeyboardMarkup()
+    markup.add(telebot.types.InlineKeyboardButton("تليجرام ✈️", url="https://t.me/Mohamed_3m"))
+    markup.add(telebot.types.InlineKeyboardButton("واتساب 🟢", url="https://wa.me/201012289349"))
     
-    markup = InlineKeyboardMarkup()
-    markup.row_width = 2
-    markup.add(
-        InlineKeyboardButton("تليجرام ✈️", url="https://t.me/Mohamed_3m"),
-        InlineKeyboardButton("واتساب 🟢", url="https://wa.me/201012289349"), # تأكد من رقمك هنا
-        InlineKeyboardButton("جيميل 📧", url="mailto:your-email@gmail.com")
-    )
-    
-    bot.reply_to(message, welcome_text, reply_markup=markup)
+    bot.reply_to(message, "أهلاً بك! أنا بوت م. محمد محبوب نصار. تقدر تدردش معايا أو نذاكر سوا. للتواصل مع المطور استعمل الأزرار:", reply_markup=markup)
 
 @app.route('/' + TELEGRAM_TOKEN, methods=['POST'])
 def getMessage():
