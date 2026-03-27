@@ -4,12 +4,12 @@ from flask import Flask, request
 from google import genai
 from google.genai import types
 
-# الإعدادات اللي Vercel بيحبها
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# الإعدادات
+TOKEN = os.environ.get('TELEGRAM_TOKEN')
+API_KEY = os.environ.get('GEMINI_API_KEY')
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
-client = genai.Client(api_key=GEMINI_API_KEY)
+bot = telebot.TeleBot(TOKEN, threaded=False)
+client = genai.Client(api_key=API_KEY)
 app = Flask(__name__)
 
 user_sessions = {}
@@ -19,12 +19,13 @@ def get_ai_response(user_id, text_input):
         user_sessions[user_id] = client.chats.create(
             model="gemini-2.0-flash", 
             config=types.GenerateContentConfig(
-                system_instruction="أنت مساعد ذكي ومطورك هو م. محمد محبوب نصار، رد بالمصري."
+                system_instruction="أنت مساعد ذكي وصديق لمحمد محبوب نصار، رد بالمصري."
             )
         )
     return user_sessions[user_id].send_message(text_input).text
 
-@app.route('/' + TELEGRAM_TOKEN, methods=['POST'])
+# السطر ده هو اللي هيشغل البوت بناءً على الصورة (الرابط بالتوكن)
+@app.route('/' + TOKEN, methods=['POST'])
 def getMessage():
     json_string = request.get_data().decode('utf-8')
     update = telebot.types.Update.de_json(json_string)
